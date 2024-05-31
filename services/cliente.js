@@ -1,11 +1,23 @@
-/* eslint-disable max-len */
-/* eslint-disable require-jsdoc */
 const connection = require('../configs/dbConfig');
+const NodeCache = require('node-cache');
+const localcache = new NodeCache();
 
 class ClientesService {
+    
+
     async getAll() {
-        const clientes = await (await connection).execute('SELECT * FROM clientes');
-        return clientes[0];
+        
+        const clientesCache = localcache.get("clientes")
+
+        if (clientesCache !== undefined) {
+            console.log('Dados do cache para URL: clientes');
+            return clientesCache;
+        } else {
+            console.log('Dados não encontrados no cache para URL: clientes');
+            const clientes = await (await connection).execute('SELECT * FROM clientes');
+            localcache.set('clientes', clientes[0], 60);
+            return clientes[0]
+        }
     }
 
     async create(client) {
@@ -18,6 +30,7 @@ class ClientesService {
 
         const result = await (await connection).execute(query, values);
 
+        localcache.flushAll();
         return result[0].affectedRows;
     }
 
@@ -35,7 +48,8 @@ class ClientesService {
                 client.id,
             ];
         const result = await (await connection).execute(query, values);
-
+        
+        localcache.flushAll();
         return result[0].affectedRows;
     }
 
@@ -43,6 +57,7 @@ class ClientesService {
         const query = 'DELETE FROM clientes WHERE id = ?';
         const result = await (await connection).execute(query, [id]);
 
+        localcache.flushAll();
         return result[0].affectedRows;
     }
 }
