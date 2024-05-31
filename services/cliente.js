@@ -15,7 +15,7 @@ class ClientesService {
         } else {
             console.log('Dados não encontrados no cache para URL: clientes');
             const clientes = await (await connection).execute('SELECT * FROM clientes');
-            localcache.set('clientes', clientes[0], 60);
+            localcache.set('clientes', clientes[0], 30);
             return clientes[0]
         }
     }
